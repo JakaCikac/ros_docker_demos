@@ -33,11 +33,11 @@ If we want our all ROS nodes to easily talk to each other, we'll can use a virtu
 > Build a ROS image that includes ROS tutorials using this `Dockerfile:`
 
 ```dockerfile
-FROM ros:indigo-ros-base
+FROM ros
 # install ros tutorials packages
 RUN apt-get update && apt-get install -y
-    ros-indigo-ros-tutorials \
-    ros-indigo-common-tutorials \
+    ros-kinetic-ros-tutorials \
+    ros-kinetic-common-tutorials \
     && rm -rf /var/lib/apt/lists/
 ```
 
@@ -145,33 +145,35 @@ Now that you have an appreciation for bootstrapping a distributed ROS example ma
 > Start by making a folder named `rostutorials` and moving the Dockerfile we used earlier inside this directory. Then create a yaml file named `docker-compose.yml` in the same directory and paste the following inside:
 
 ```yaml
-master:
-  build: .
-  container_name: master
-  command:
-    - roscore
+version: '2'
+services:
+  master:
+    build: .
+    container_name: master
+    command:
+      - roscore
 
-talker:
-  build: .
-  container_name: talker
-  environment:
-    - "ROS_HOSTNAME=talker"
-    - "ROS_MASTER_URI=http://master:11311"
-  command: rosrun roscpp_tutorials talker
+  talker:
+    build: .
+    container_name: talker
+    environment:
+      - "ROS_HOSTNAME=talker"
+      - "ROS_MASTER_URI=http://master:11311"
+    command: rosrun roscpp_tutorials talker
 
-listener:
-  build: .
-  container_name: listener
-  environment:
-    - "ROS_HOSTNAME=listener"
-    - "ROS_MASTER_URI=http://master:11311"
-  command: rosrun roscpp_tutorials listener
+  listener:
+    build: .
+    container_name: listener
+    environment:
+      - "ROS_HOSTNAME=listener"
+      - "ROS_MASTER_URI=http://master:11311"
+    command: rosrun roscpp_tutorials listener
 ```
 
-> Now from inside the same folder, use docker-copose to launch our ROS nodes and specify that they coexist on their own network:
+> Now from inside the same folder, use docker-compose to launch our ROS nodes and specify that they coexist on their own network:
 
 ```console
-$ docker-compose --x-networking up -d
+$ docker-compose up -d
 ```
 
 > Notice that a new network named `rostutorials` has now been created. We can monitor the logged output of each service, such as the listener node like so:
@@ -184,7 +186,7 @@ $ docker-compose logs listener
 
 ```console
 $ docker-compose stop
-$ docker-compose rm
+$ docker-compose down
 ```
 
 > Note: the auto-generated network, `rostutorials`, will persist over the life of the docker engine or until you explicitly remove it using [`docker network rm`](https://docs.docker.com/engine/reference/commandline/network_rm/)\.
